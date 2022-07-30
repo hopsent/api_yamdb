@@ -1,12 +1,10 @@
-from rest_framework import viewsets, mixins, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from reviews.models import Title, Genre, Category
-from api.serializers import (
-    TitleCreateSerializer,
-    TitleListSerializer,
-    GenreSerializer,
-    CategorySerializer)
+from rest_framework import filters, mixins, viewsets
+
 from api.permissions import IsAdminOrReadOnly
+from api.serializers import (CategorySerializer, GenreSerializer,
+                             TitleCreateSerializer, TitleListSerializer)
+from reviews.models import Category, Genre, Title
 
 
 class ListCreateDeleteViewSet(
