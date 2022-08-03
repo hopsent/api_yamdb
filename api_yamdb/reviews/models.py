@@ -2,52 +2,74 @@ from django.contrib.auth.models import (
     AbstractUser,
     BaseUserManager
 )
-
+from django.contrib.auth.tokens import default_token_generator
 from django.db import models
 from django.forms import ValidationError
 
 
-ROLE_CHOICES = [
+ROLE_CHOICES = (
     ("user", "user"),
     ("moderator", "moderator"),
     ("admin", "admin"),
-]
+)
 
 
 class UserManager(BaseUserManager):
     """
-    Customized :model:'reviews.User' management.
-    Providing password-free creating objects.
+    Кастомизация менеджера для :model:'reviews.User'.
+    Обеспечивает регистрацию моделей без пароля.
     """
 
-    def create_user(self, username, email, password=None):
+    def create_user(
+        self,
+        username,
+        email,
+        password=None,
+        **kwargs,
+    ):
         """
-        Creating an instance of :model:'reviews.User' 
-        with email and username. Django set password field
-        as required. That's why we shall set
-        each user's password as None.
+        Создание объекта :model:'reviews.User'
+        с email и username - обязательными полями.
+        Авторизация не предполагает наличие пароля.
         """
 
         if username is None:
-            raise TypeError('Users must have a username.')
+            raise TypeError('У юзеров должен быть username.')
 
         if email is None:
-                raise TypeError(
-                    'Users must have an email address.'
-                )
+            raise TypeError('У юзеров должен быть email.')
 
         user = self.model(
             username=username,
-            email=self.normalize_email(email)
+            email=self.normalize_email(email),
+            **kwargs
         )
         user.set_password(password)
         user.save()
 
         return user
 
+    def create_superuser(self, username, email, password, **kwargs):
+        """Создать суперюзера."""
+
+        if password is None:
+            raise TypeError('Суперюзер должен быть запаролен.')
+
+        user = self.model(
+            username=username,
+            email=self.normalize_email(email),
+            **kwargs,
+        )
+        user.set_password(password)
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
+
+        return user
+
 
 class User(AbstractUser):
-    """Customized User model."""
+    """Кастомизированная модель User."""
 
     email = models.EmailField(
         blank=False,
@@ -56,7 +78,7 @@ class User(AbstractUser):
     first_name = models.CharField(
         max_length=150,
         blank=True
-        )
+    )
     bio = models.TextField(
         blank=True
     )
@@ -72,15 +94,25 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    def get_full_name(self):
-        return self.username
-
-    def get_short_name(self):
-        return self.username
-
     def clean(self):
-        """Setting 'me' as prohibited username."""
+        """Запрет на 'me' в username."""
+        super().clean()
         if self.username == 'me':
             raise ValidationError(
                 "Username не может иметь значение 'me'."
             )
+
+    def send_confirmation_code(self):
+        """Отправка сообщения с кодом для получения jwt-токена."""
+
+        confirmation_code = default_token_generator.make_token(self)
+        message = f'Введите {confirmation_code} в запрос к v1/auth/token.'
+        self.email_user(
+            subject='Ваш confirmation_code для YaMDb.',
+            message=message
+        )
+
+    # Нейтрализация предупреждения Django о некорректной работе
+    # паджинации в приложении api на эндпоинте v1/users/.
+    class Meta:
+        ordering = ('-id',)
