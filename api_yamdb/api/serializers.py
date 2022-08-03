@@ -1,10 +1,12 @@
+import datetime
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import User, Review, Comments
+from reviews.models import User, Review, Comments, Category, Genre, Title
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -191,3 +193,49 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         fields = '__all__'
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Genre
+        exclude = ('id', )
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        exclude = ('id', )
+
+
+class TitleListSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    rating = serializers.FloatField(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+    def validate(self, data):
+        if data['year'] > datetime.date.today().year:
+            message = 'Год выпуска не может быть больше текущего'
+            raise serializers.ValidationError(message)
+        return data
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
+    genre = serializers.SlugRelatedField(slug_field='slug', queryset=Genre.objects.all(), many=True)
+    description = serializers.CharField(required=False)
+
+    class Meta:
+        exclude = ('rating',)
+        model = Title
+
+    def validate(self, data):
+        if data['year'] > datetime.date.today().year:
+            message = 'Год выпуска не может быть больше текущего'
+            raise serializers.ValidationError(message)
+        return data

@@ -1,7 +1,7 @@
-from rest_framework import permissions
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
-class AdminOnly(permissions.BasePermission):
+class AdminOnly(BasePermission):
     """
     Предоставляет доступ только пользователям с ролью 'admin'
     и суперюзеру. В тестах роль суперюзера - 'user',
@@ -19,7 +19,7 @@ class AdminOnly(permissions.BasePermission):
         ) or (request.user.is_superuser and request.user.is_authenticated)
 
 
-class SelfOnly(permissions.BasePermission):
+class SelfOnly(BasePermission):
     """
     Предоставляем доступ только пользователю
     к записи в базе о самом пользователе.
@@ -34,3 +34,11 @@ class SelfOnly(permissions.BasePermission):
         return (
             obj.username == request.user.username
         )
+
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        else:
+            return request.user.is_admin
