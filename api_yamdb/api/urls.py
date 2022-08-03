@@ -5,7 +5,6 @@ from . import views
 
 router = DefaultRouter()
 router.register('users', views.UserViewSet)
-router.register('auth/signup', views.RegistrationViewSet)
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     views.ReviewViewSet,
@@ -17,6 +16,9 @@ router.register(
     views.CommentViewSet,
     basename='comments'
 )
+router.register('titles', views.TitlesViewSet, basename='title')
+router.register('genres', views.GenresViewSet, basename='genre')
+router.register('categories', views.CategoriesViewSet, basename='category')
 
 
 urlpatterns = [

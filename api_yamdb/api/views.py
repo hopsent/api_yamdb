@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets, filters, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -8,8 +9,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
 
 from . import serilizers as s
-from .permissions import AdminOnly, SelfOnly
-from reviews.models import User, Review
+from .permissions import AdminOnly, SelfOnly, IsAdminOrReadOnly
+from reviews.models import User, Review, Category, Genre, Title
+
+
+class ListCreateDeleteViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin,
+    mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
+    pass
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -155,3 +163,31 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Review, pk=review_id, title=title_id)
         author = self.request.user
         serializer.save(review=review, author=author)
+
+
+class TitlesViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    filter_backends = (DjangoFilterBackend, )
+    filterset_fields = ('category', 'genre', 'name', 'year')
+    permission_classes = (IsAdminOrReadOnly, )
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return s.TitleListSerializer
+        return s.TitleCreateSerializer
+
+
+class GenresViewSet(ListCreateDeleteViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = s.GenreSerializer
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    permission_classes = (IsAdminOrReadOnly, )
+
+
+class CategoriesViewSet(ListCreateDeleteViewSet):
+    queryset = Category.objects.all()
+    serializer_class = s.CategorySerializer
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    permission_classes = (IsAdminOrReadOnly, )
