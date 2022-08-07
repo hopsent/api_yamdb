@@ -7,9 +7,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
+from django.db.models import Avg
 
 from . import serializers as s
-from .permissions import AdminOnly, SelfOnly, IsAdminOrReadOnly
+from .permissions import (
+    AdminOnly, SelfOnly, IsAdminOrReadOnly, ReviewCommentPermission)
+
 from reviews.models import User, Review, Category, Genre, Title
 from api.filters import TitleFilter
 
@@ -128,12 +131,10 @@ class TokenObtainApiYamdbView(TokenViewBase):
     serializer_class = s.YAMDbTokenObtainSerializer
 
 
-# Часть третьего разработчика (Дмитрий, ветка feature_3)
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = s.ReviewSerializer
-    # пермишены ещё не написаны
-    # следую названиям как учили в теории
-    permission_classes = [AdminOnly]
+    permission_classes = [ReviewCommentPermission]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -149,9 +150,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = s.CommentSerializer
-    # пермишены ещё не написаны
-    # следую названиям как учили в теории
-    permission_classes = [AdminOnly]
+    permission_classes = [ReviewCommentPermission]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
@@ -167,7 +167,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        Avg("reviews__score"))
     filter_backends = (DjangoFilterBackend, )
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly, )
