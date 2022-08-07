@@ -244,9 +244,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         try:
             year = data['year']
-            if year > datetime.date.today().year:
-                message = 'Год выпуска не может быть больше текущего'
-                raise serializers.ValidationError(message)
         except:
             KeyError('Необходимо указать год')
         return data

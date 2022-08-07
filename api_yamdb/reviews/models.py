@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import (
     AbstractUser,
     BaseUserManager
@@ -129,6 +131,9 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('-id',)
+
 
 class Genre(models.Model):
     """Модель для жанров."""
@@ -139,12 +144,18 @@ class Genre(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('-id',)
+
 
 class Title(models.Model):
     """Модель для произведений."""
 
     name = models.TextField()
-    year = models.IntegerField()
+    year = models.IntegerField(validators=[MaxValueValidator(
+        datetime.date.today().year,
+        'Год выпуска не может быть больше текущего'
+    )])
     description = models.TextField()
     rating = models.FloatField(null=True)
     category = models.ForeignKey(
@@ -161,6 +172,9 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ('-id',)
 
 
 class TitleGenre(models.Model):
