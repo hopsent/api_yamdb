@@ -1,4 +1,3 @@
-import datetime
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
@@ -243,10 +242,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         try:
-            year = data['year']
-            if year > datetime.date.today().year:
-                message = 'Год выпуска не может быть больше текущего'
-                raise serializers.ValidationError(message)
-        except KeyError or ValidationError:
-            raise KeyError('Необходимо указать год')
+            data['year']
+        except KeyError:
+            print('Необходимо указать год')
         return data
