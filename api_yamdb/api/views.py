@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 from . import serializers as s
 from .permissions import AdminOnly, SelfOnly, IsAdminOrReadOnly
 from reviews.models import User, Review, Category, Genre, Title
+from api.filters import TitleFilter
 
 
 class ListCreateDeleteViewSet(
@@ -168,7 +169,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend, )
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly, )
     pagination_class = PageNumberPagination
 

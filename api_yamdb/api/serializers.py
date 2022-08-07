@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import serializers, response, status
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework_simplejwt.tokens import AccessToken
 
