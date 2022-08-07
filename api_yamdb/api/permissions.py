@@ -55,6 +55,10 @@ class IsAdminOrReadOnly(BasePermission):
 
 
 class ReviewCommentPermission(BasePermission):
+    """
+    Пермишен для доступа к отзывам и комментариям.
+    """
+
     def has_permission(self, request, view):
         return (request.method in SAFE_METHODS
                 or request.user.is_authenticated)

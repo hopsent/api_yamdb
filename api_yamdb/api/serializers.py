@@ -174,6 +174,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализация комментариев."""
+
     review = serializers.SlugRelatedField(
         slug_field='text',
         read_only=True
@@ -189,6 +190,9 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для жанров.
+    """
 
     class Meta:
         model = Genre
@@ -203,6 +207,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleListSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для представления списка Titles.
+    """
+
     category = CategorySerializer(read_only=True)
     rating = serializers.FloatField(
         source='reviews__score__avg', read_only=True
@@ -215,8 +223,18 @@ class TitleListSerializer(serializers.ModelSerializer):
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
-    genre = serializers.SlugRelatedField(slug_field='slug', queryset=Genre.objects.all(), many=True)
+    """
+    Сериализатор создания Title.
+    """
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
     description = serializers.CharField(required=False)
 
     class Meta:

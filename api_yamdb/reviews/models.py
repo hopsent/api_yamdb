@@ -122,6 +122,7 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
+    """Модель для категорий."""
     name = models.TextField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
@@ -130,6 +131,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель для жанров."""
+
     name = models.TextField()
     slug = models.SlugField(unique=True)
 
@@ -138,6 +141,8 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Модель для произведений."""
+
     name = models.TextField()
     year = models.IntegerField()
     description = models.TextField()
@@ -243,6 +248,5 @@ class Comments(models.Model):
         ordering = ['pub_date']
 
     def __str__(self):
-        return (f'Комментарий пользователя {self.author} '
+        return (f'Комментарий пользователя {self.author}'
                 f'на отзыв {self.review}.')
-

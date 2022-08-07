@@ -12,7 +12,6 @@ from django.db.models import Avg
 from . import serializers as s
 from .permissions import (
     AdminOnly, SelfOnly, IsAdminOrReadOnly, ReviewCommentPermission)
-
 from reviews.models import User, Review, Category, Genre, Title
 from api.filters import TitleFilter
 
@@ -132,6 +131,9 @@ class TokenObtainApiYamdbView(TokenViewBase):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для отзывов.
+    """
     serializer_class = s.ReviewSerializer
     permission_classes = [ReviewCommentPermission]
     pagination_class = PageNumberPagination
@@ -149,6 +151,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для комментариев.
+    """
+
     serializer_class = s.CommentSerializer
     permission_classes = [ReviewCommentPermission]
     pagination_class = PageNumberPagination
@@ -167,6 +173,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для Titles.
+    """
+
     queryset = Title.objects.all().annotate(
         Avg("reviews__score"))
     filter_backends = (DjangoFilterBackend, )
@@ -181,6 +191,10 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class GenresViewSet(ListCreateDeleteViewSet):
+    """
+    Вью-сет для жанров.
+    """
+
     queryset = Genre.objects.all()
     serializer_class = s.GenreSerializer
     filter_backends = (filters.SearchFilter, )
@@ -191,6 +205,10 @@ class GenresViewSet(ListCreateDeleteViewSet):
 
 
 class CategoriesViewSet(ListCreateDeleteViewSet):
+    """
+    Вью-сет для категорий.
+    """
+
     queryset = Category.objects.all()
     serializer_class = s.CategorySerializer
     filter_backends = (filters.SearchFilter, )
