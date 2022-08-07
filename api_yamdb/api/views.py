@@ -1,15 +1,26 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets, filters, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
+from django.db.models import Avg
 
-from . import serilizers as s
-from .permissions import AdminOnly, SelfOnly
-from reviews.models import User
+from . import serializers as s
+from .permissions import (
+    AdminOnly, SelfOnly, IsAdminOrReadOnly, ReviewCommentPermission)
+from reviews.models import User, Review, Category, Genre, Title
+from api.filters import TitleFilter
+
+
+class ListCreateDeleteViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin,
+    mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
+    pass
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -117,3 +128,91 @@ class TokenObtainApiYamdbView(TokenViewBase):
 
     permission_classes = (AllowAny,)
     serializer_class = s.YAMDbTokenObtainSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для отзывов.
+    """
+    serializer_class = s.ReviewSerializer
+    permission_classes = [ReviewCommentPermission]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        author = self.request.user
+        serializer.save(title=title, author=author)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для комментариев.
+    """
+
+    serializer_class = s.CommentSerializer
+    permission_classes = [ReviewCommentPermission]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, pk=review_id)
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, pk=review_id, title=title_id)
+        author = self.request.user
+        serializer.save(review=review, author=author)
+
+
+class TitlesViewSet(viewsets.ModelViewSet):
+    """
+    Вью-сет для Titles.
+    """
+
+    queryset = Title.objects.all().annotate(
+        Avg("reviews__score"))
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = TitleFilter
+    permission_classes = (IsAdminOrReadOnly, )
+    pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return s.TitleListSerializer
+        return s.TitleCreateSerializer
+
+
+class GenresViewSet(ListCreateDeleteViewSet):
+    """
+    Вью-сет для жанров.
+    """
+
+    queryset = Genre.objects.all()
+    serializer_class = s.GenreSerializer
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    permission_classes = (IsAdminOrReadOnly, )
+    lookup_field = 'slug'
+    pagination_class = PageNumberPagination
+
+
+class CategoriesViewSet(ListCreateDeleteViewSet):
+    """
+    Вью-сет для категорий.
+    """
+
+    queryset = Category.objects.all()
+    serializer_class = s.CategorySerializer
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    permission_classes = (IsAdminOrReadOnly, )
+    lookup_field = 'slug'
+    pagination_class = PageNumberPagination
