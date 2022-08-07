@@ -41,4 +41,6 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         else:
-            return request.user.is_admin
+            return (
+            request.user.is_authenticated and request.user.role == 'admin'
+        ) or (request.user.is_superuser and request.user.is_authenticated)
