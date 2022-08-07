@@ -247,6 +247,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
             if year > datetime.date.today().year:
                 message = 'Год выпуска не может быть больше текущего'
                 raise serializers.ValidationError(message)
-        except KeyError and ValidationError:
+        except KeyError or ValidationError:
             raise KeyError('Необходимо указать год')
         return data
