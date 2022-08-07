@@ -1,5 +1,4 @@
 import datetime
-
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
@@ -149,33 +148,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     """Сериализация отзывов."""
     title = serializers.SlugRelatedField(
         slug_field='name',
-        read_only=True
+        read_only=True,
     )
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-        # на счёт параметра default я плохо понял
-        # если пайтест не пройдёт, то попробовать
-        # его разкомментить
-        # default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = Review
         fields = '__all__'
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=['title', 'author'],
-                message='Отзыв на произведение уже есть'
-            )
-        ]
 
     def validate(self, data):
-        if data['title'] == data['author']:
-            raise serializers.ValidationError(
-                'Повторно оставить отзыв на произведение невозможно'
-            )
+        request = self.context['request']
+        author = request.user
+        title_id = self.context['view'].kwargs.get('title_id')
+        if request.method == 'POST':
+            if Review.objects.filter(title=title_id, author=author).exists():
+                raise serializers.ValidationError(
+                    'Вы не можете добавить более'
+                    'одного отзыва на произведение'
+                )
         return data
 
 
@@ -211,7 +204,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    rating = serializers.FloatField(read_only=True)
+    rating = serializers.FloatField(
+        source='reviews__score__avg', read_only=True
+    )
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
@@ -230,12 +225,10 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         try:
-            year = data['year'] 
+            year = data['year']
             if year > datetime.date.today().year:
                 message = 'Год выпуска не может быть больше текущего'
                 raise serializers.ValidationError(message)
         except:
             KeyError('Необходимо указать год')
         return data
-
-
