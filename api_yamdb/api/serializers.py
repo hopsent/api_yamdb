@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import serializers
+from rest_framework import serializers, response, status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -218,12 +218,6 @@ class TitleListSerializer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    def validate(self, data):
-        if data['year'] > datetime.date.today().year:
-            message = 'Год выпуска не может быть больше текущего'
-            raise serializers.ValidationError(message)
-        return data
-
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
@@ -235,7 +229,13 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         model = Title
 
     def validate(self, data):
-        if data['year'] > datetime.date.today().year:
-            message = 'Год выпуска не может быть больше текущего'
-            raise serializers.ValidationError(message)
+        try:
+            year = data['year'] 
+            if year > datetime.date.today().year:
+                message = 'Год выпуска не может быть больше текущего'
+                raise serializers.ValidationError(message)
+        except:
+            KeyError('Необходимо указать год')
         return data
+
+
