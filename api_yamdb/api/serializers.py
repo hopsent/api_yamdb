@@ -136,13 +136,9 @@ class YAMDbTokenObtainSerializer(serializers.Serializer):
         return data
 
 
-# Часть третьего разработчика (Дмитрий, ветка feature_3)
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализация отзывов."""
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True,
-    )
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -150,7 +146,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         request = self.context['request']
@@ -168,10 +164,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализация комментариев."""
 
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True
-    )
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
@@ -179,7 +171,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comments
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -205,7 +197,7 @@ class TitleListSerializer(serializers.ModelSerializer):
     """
 
     category = CategorySerializer(read_only=True)
-    rating = serializers.FloatField(
+    rating = serializers.IntegerField(
         source='reviews__score__avg', read_only=True
     )
     genre = GenreSerializer(read_only=True, many=True)

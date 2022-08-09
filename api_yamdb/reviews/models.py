@@ -195,7 +195,6 @@ class TitleGenre(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
-# Часть третьего разработчика (Дмитрий, ветка feature_3)
 class Review(models.Model):
     """Отзывы на произведение."""
     title = models.ForeignKey(
@@ -213,7 +212,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.PositiveIntegerField(
+    score = models.PositiveSmallIntegerField(
         verbose_name='Оценка произведения',
         validators=[
             MinValueValidator(
@@ -229,6 +228,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации отзыва',
         auto_now_add=True,
+        db_index=True
     )
 
     class Meta:
@@ -266,7 +266,8 @@ class Comments(models.Model):
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации комментария',
-        auto_now_add=True
+        auto_now_add=True,
+        db_index=True
     )
 
     class Meta:
