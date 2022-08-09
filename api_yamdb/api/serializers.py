@@ -82,15 +82,9 @@ class YAMDbTokenObtainSerializer(serializers.Serializer):
     Респонз - это аксесс-токен (рефреш-токен не выдается).
     """
 
-    username_field = User.USERNAME_FIELD
     token = AccessToken
-
-    # Определяем поля объекта класса.
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields["confirmation_code"] = serializers.CharField()
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
     # Далее валидируем поля на наличие данных.
     def validate_confirmation_code_field(self, value):
