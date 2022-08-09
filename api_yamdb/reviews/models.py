@@ -13,9 +13,9 @@ from django.core.validators import (
 )
 
 ROLE_CHOICES = [
-    ("user", "user"),
-    ("moderator", "moderator"),
-    ("admin", "admin"),
+    ('user', 'user'),
+    ('moderator', 'moderator'),
+    ('admin', 'admin'),
 ]
 
 
@@ -96,9 +96,6 @@ class User(AbstractUser):
 
     objects = UserManager()
 
-    def __str__(self):
-        return self.username
-
     def clean(self):
         """Запрет на 'me' в username."""
         super().clean()
@@ -117,10 +114,26 @@ class User(AbstractUser):
             message=message
         )
 
+    # Проверяем, что юзер выполняет роль админа.
+    @property
+    def role_check_admin(self):
+        return self.role == 'admin' or self.is_superuser
+
+    @property
+    def role_check_moderator(self):
+        return (
+            self.role == 'moderator'
+            or self.role == 'admin'
+            or self.is_superuser
+        )
+
     # Нейтрализация предупреждения Django о некорректной работе
     # паджинации в приложении api на эндпоинте v1/users/.
     class Meta:
         ordering = ('-id',)
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):

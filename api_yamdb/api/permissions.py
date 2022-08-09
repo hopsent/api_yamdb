@@ -10,13 +10,13 @@ class AdminOnly(BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_authenticated and request.user.role == 'admin'
-        ) or (request.user.is_superuser and request.user.is_authenticated)
+            request.user.is_authenticated and request.user.role_check_admin
+        )
 
     def has_object_permission(self, request, view, obj):
         return (
-            request.user.is_authenticated and request.user.role == 'admin'
-        ) or (request.user.is_superuser and request.user.is_authenticated)
+            request.user.is_authenticated and request.user.role_check_admin
+        )
 
 
 class SelfOnly(BasePermission):
@@ -46,12 +46,12 @@ class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        return request.user.is_authenticated and request.user.role == 'admin'
+        return request.user.is_authenticated and request.user.role_check_admin
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
-        return request.user.is_authenticated and request.user.role == 'admin'
+        return request.user.is_authenticated and request.user.role_check_admin
 
 
 class ReviewCommentPermission(BasePermission):
@@ -66,7 +66,5 @@ class ReviewCommentPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return (request.method in SAFE_METHODS
                 or request.user.is_authenticated
-                and request.user.role == 'admin'
-                or request.user.is_authenticated
-                and request.user.role == 'moderator'
+                and request.user.role_check_moderator
                 or obj.author == request.user)
