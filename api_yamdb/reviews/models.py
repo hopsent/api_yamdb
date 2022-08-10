@@ -141,11 +141,11 @@ class Category(models.Model):
     name = models.TextField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ('-id',)
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -154,23 +154,27 @@ class Genre(models.Model):
     name = models.TextField()
     slug = models.SlugField(unique=True)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ('-id',)
+        
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
     """Модель для произведений."""
 
     name = models.TextField()
-    year = models.IntegerField(validators=[MaxValueValidator(
-        datetime.date.today().year,
-        'Год выпуска не может быть больше текущего'
-    )])
+    year = models.IntegerField(
+        validators=[
+            MaxValueValidator(
+                datetime.date.today().year,
+                'Год выпуска не может быть больше текущего'
+            )
+        ],
+        db_index=True
+    )
     description = models.TextField()
-    rating = models.FloatField(null=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -183,11 +187,11 @@ class Title(models.Model):
         through='TitleGenre'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ('-id',)
+    
+    def __str__(self):
+        return self.name
 
 
 class TitleGenre(models.Model):
