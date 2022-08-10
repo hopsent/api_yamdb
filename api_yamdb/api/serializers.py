@@ -197,14 +197,15 @@ class TitleListSerializer(serializers.ModelSerializer):
     """
 
     category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True
-    )
+    rating = serializers.SerializerMethodField()
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    def get_rating(self, obj):
+        return obj.reviews.aggregate(Avg('score'))['score__avg']
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -223,8 +224,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
 
     class Meta:
-        exclude = ('rating',)
-        model = Title
+        fields = '__all__'
 
     def validate(self, data):
         try:
