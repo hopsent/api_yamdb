@@ -225,6 +225,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
 
     class Meta:
+        model = Title
         fields = '__all__'
 
     def validate(self, data):
